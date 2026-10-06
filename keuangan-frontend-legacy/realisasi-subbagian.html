@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realisasi Per Subbagian - Sistem Keuangan</title>
+    <!-- Import Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-size: 13px; }
+        .table-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
+        
+        table.custom-table { width: 100%; border-collapse: collapse; }
+        table.custom-table th, table.custom-table td { border: 1px solid #000; padding: 6px 10px; vertical-align: middle; }
+        
+        /* Pewarnaan Khusus Sesuai Excel */
+        .bg-header-utama { background-color: #0000ff !important; color: white; text-align: center; font-weight: bold; font-size: 13px; }
+        .bg-judul-grup { background-color: #00ff00 !important; color: black; font-weight: bold; text-transform: uppercase; }
+        .bg-subtotal { background-color: #ffe699 !important; font-weight: bold; }
+        .bg-grandtotal { background-color: #f8cbad !important; font-weight: bold; text-align: center; }
+        
+        .text-end { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .fw-bold { font-weight: bold !important; }
+        .btn-aksi { padding: 2px 8px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="m-0 text-primary fw-bold">Realisasi Per Subbagian</h3>
+                <h6 class="text-muted">Pantau serapan anggaran berdasarkan unit kerja.</h6>
+            </div>
+            <div>
+                <a href="home.html" class="btn btn-secondary btn-sm me-2">Kembali ke Beranda</a>
+                <button class="btn btn-success btn-sm" onclick="bukaModalJudul()">+ Tambah Judul Subbagian</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table table-bordered custom-table">
+                <thead>
+                    <tr>
+                        <th class="bg-header-utama" style="text-align: left !important; width: 35%;">URAIAN KEGIATAN</th>
+                        <th class="bg-header-utama">PAGU</th>
+                        <th class="bg-header-utama">REALISASI</th>
+                        <th class="bg-header-utama">%</th>
+                        <th class="bg-header-utama">SISA ANGGARAN</th>
+                        <th class="bg-header-utama">%</th>
+                        <th class="bg-header-utama" style="width: 10%;">AKSI</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBodySubbagian">
+                    <tr><td colspan="7" class="text-center">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL FORM TAMBAH/EDIT JUDUL SUBBAGIAN -->
+    <div class="modal fade" id="modalJudul" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalJudulTitle">Tambah Judul Subbagian</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formJudul">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nama Judul Subbagian</label>
+                            <input type="text" class="form-control" id="namaJudul" placeholder="Contoh: SUBBAGIAN BANGUNAN" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 1. Cek Token Login
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Akses ditolak! Silakan login kembali.');
+            window.location.href = 'login.html';
+        }
+
+        // 2. Setup URL API dan Modal
+        const API_JUDUL = 'http://localhost:5000/api/realisasi/subbagian-judul';
+        const modalElement = document.getElementById('modalJudul');
+        const bsModal = new bootstrap.Modal(modalElement);
+        let idEditAktif = null;
+        function formatUang(angka) { return (!angka || angka === 0 || angka === "0.00") ? "-" : new Intl.NumberFormat('id-ID').format(angka); }
+        function formatPersen(angka) { return (!angka || angka === 0 || isNaN(angka)) ? "-" : angka.toFixed(2) + '%'; }
+
+        // 3. Fungsi Render Tabel
+        async function loadJudulSubbagian() {
+            try {
+                const response = await fetch(API_JUDUL, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await response.json();
+                const tableBody = document.getElementById('tableBodySubbagian');
+                tableBody.innerHTML = '';
+
+                if (result.status === "success" && result.data.length > 0) {
+                    let grandTotalPagu = 0;
+                    let grandTotalRealisasi = 0;
+
+                    result.data.forEach(item => {
+                        // Tambahkan ke Grand Total
+                        grandTotalPagu += item.subtotal_pagu;
+                        grandTotalRealisasi += item.subtotal_realisasi;
+
+                        // A. Render Baris Judul (Hijau)
+                        const trJudul = document.createElement('tr');
+                        trJudul.className = 'bg-judul-grup';
+                        trJudul.innerHTML = `
+                            <td colspan="6">${item.nama_judul}</td>
+                            <td class="text-center">
+                                <button class="btn btn-warning btn-aksi me-1" onclick="siapkanEdit(${item.id}, '${item.nama_judul}')">Edit</button>
+                                <button class="btn btn-danger btn-aksi" onclick="hapusJudul(${item.id})">Hapus</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(trJudul);
+
+                        // B. Render Rincian Detail Anggaran (Baris Putih)
+                        item.details.forEach(det => {
+                            let persenRealisasi = det.pagu > 0 ? (det.realisasi / det.pagu) * 100 : 0;
+                            let sisa = det.pagu - det.realisasi;
+                            let persenSisa = det.pagu > 0 ? (sisa / det.pagu) * 100 : 0;
+                            let warnaSisa = sisa < 0 ? 'text-danger' : '';
+
+                            const trDetail = document.createElement('tr');
+                            trDetail.innerHTML = `
+                                <td>${det.uraian}</td>
+                                <td class="text-end">${formatUang(det.pagu)}</td>
+                                <td class="text-end">${formatUang(det.realisasi)}</td>
+                                <td class="text-center">${formatPersen(persenRealisasi)}</td>
+                                <td class="text-end fw-bold ${warnaSisa}">${formatUang(sisa)}</td>
+                                <td class="text-center fw-bold ${warnaSisa}">${formatPersen(persenSisa)}</td>
+                                <td></td>
+                            `;
+                            tableBody.appendChild(trDetail);
+                        });
+
+                        // C. Render Baris Subtotal (Kuning)
+                        let subPersenRealisasi = item.subtotal_pagu > 0 ? (item.subtotal_realisasi / item.subtotal_pagu) * 100 : 0;
+                        let subSisa = item.subtotal_pagu - item.subtotal_realisasi;
+                        let subPersenSisa = item.subtotal_pagu > 0 ? (subSisa / item.subtotal_pagu) * 100 : 0;
+                        let warnaSubSisa = subSisa < 0 ? 'text-danger' : 'text-primary';
+
+                        const trSubtotal = document.createElement('tr');
+                        trSubtotal.className = 'bg-subtotal';
+                        trSubtotal.innerHTML = `
+                            <td class="text-center">Jumlah ${item.nama_judul}</td>
+                            <td class="text-end">${formatUang(item.subtotal_pagu)}</td>
+                            <td class="text-end">${formatUang(item.subtotal_realisasi)}</td>
+                            <td class="text-center">${formatPersen(subPersenRealisasi)}</td>
+                            <td class="text-end fw-bold ${warnaSubSisa}">${formatUang(subSisa)}</td>
+                            <td class="text-center fw-bold ${warnaSubSisa}">${formatPersen(subPersenSisa)}</td>
+                            <td></td>
+                        `;
+                        tableBody.appendChild(trSubtotal);
+                    });
+
+                    // D. Render Baris Grand Total (Oranye)
+                    let grandPersenRealisasi = grandTotalPagu > 0 ? (grandTotalRealisasi / grandTotalPagu) * 100 : 0;
+                    let grandSisa = grandTotalPagu - grandTotalRealisasi;
+                    let grandPersenSisa = grandTotalPagu > 0 ? (grandSisa / grandTotalPagu) * 100 : 0;
+                    let warnaGrandSisa = grandSisa < 0 ? 'text-danger' : 'text-primary';
+
+                    tableBody.innerHTML += `
+                        <tr class="bg-grandtotal">
+                            <td>TOTAL KESELURUHAN</td>
+                            <td class="text-end">${formatUang(grandTotalPagu)}</td>
+                            <td class="text-end">${formatUang(grandTotalRealisasi)}</td>
+                            <td class="text-center">${formatPersen(grandPersenRealisasi)}</td>
+                            <td class="text-end ${warnaGrandSisa}">${formatUang(grandSisa)}</td>
+                            <td class="text-center ${warnaGrandSisa}">${formatPersen(grandPersenSisa)}</td>
+                            <td></td>
+                        </tr>
+                    `;
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="7" class="text-center">Belum ada judul subbagian. Silakan tambahkan.</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Gagal memuat data", error);
+                document.getElementById('tableBodySubbagian').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal terhubung ke server API.</td></tr>`;
+            }
+        }
+
+        // 4. Fungsi Buka Modal Tambah
+        function bukaModalJudul() {
+            idEditAktif = null;
+            document.getElementById('formJudul').reset();
+            document.getElementById('modalJudulTitle').innerText = "Tambah Judul Subbagian";
+            bsModal.show();
+        }
+
+        // 5. Fungsi Buka Modal Edit
+        function siapkanEdit(id, nama) {
+            idEditAktif = id;
+            document.getElementById('namaJudul').value = nama;
+            document.getElementById('modalJudulTitle').innerText = "Edit Judul Subbagian";
+            bsModal.show();
+        }
+
+        // 6. Fungsi Submit (Simpan/Update) Data
+        document.getElementById('formJudul').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = { 
+                nama_judul: document.getElementById('namaJudul').value.toUpperCase() // Otomatis jadikan huruf kapital
+            };
+            
+            const targetUrl = idEditAktif ? `${API_JUDUL}/${idEditAktif}` : API_JUDUL;
+            const targetMethod = idEditAktif ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(targetUrl, {
+                    method: targetMethod,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(response.ok) {
+                    bsModal.hide();
+                    loadJudulSubbagian(); // Refresh tabel
+                } else { 
+                    alert("Gagal menyimpan data."); 
+                }
+            } catch (error) { 
+                alert("Terjadi kesalahan sistem."); 
+            }
+        });
+
+        // 7. Fungsi Hapus Data
+        async function hapusJudul(id) {
+            if(!confirm("Apakah Anda yakin ingin menghapus judul ini?")) return;
+            try {
+                const response = await fetch(`${API_JUDUL}/${id}`, { 
+                    method: 'DELETE', 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                
+                if(response.ok) {
+                    loadJudulSubbagian(); // Refresh tabel
+                } else { 
+                    alert("Gagal menghapus data."); 
+                }
+            } catch (error) { 
+                alert("Terjadi kesalahan sistem."); 
+            }
+        }
+
+        // Jalankan fungsi load saat halaman pertama kali dibuka
+        loadJudulSubbagian();
+    </script>
+</body>
+</html>

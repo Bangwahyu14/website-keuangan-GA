@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realisasi 2026 - Sistem Keuangan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-size: 13px; }
+        .table-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 30px; }
+        
+        table.excel-table { width: max-content; border-collapse: collapse; white-space: nowrap; }
+        table.excel-table th, table.excel-table td { border: 1px solid #000; padding: 6px 10px; vertical-align: middle; }
+        
+        .bg-blue { background-color: #0070C0 !important; color: white; text-align: center; font-weight: bold; font-size: 12px; }
+        .bg-purple { background-color: #a200ff !important; color: white; text-align: center; font-weight: bold; font-size: 12px; }
+        .bg-light-blue { background-color: #ddebf7 !important; color: black; text-align: center; font-weight: bold; font-size: 12px; }
+        .bg-light-purple { background-color: #e4dfec !important; color: black; text-align: center; font-weight: bold; font-size: 12px; }
+        
+        .row-Program { background-color: #f4cccc; font-weight: bold; }
+        .row-Kegiatan { background-color: #d9d2e9; font-weight: bold; }
+        .row-KRO { background-color: #d9ead3; font-weight: bold; }
+        .row-RO { font-weight: bold; }
+        .row-Komponen { font-weight: bold; }
+        .row-Subkomponen { font-style: italic; }
+        
+        .col-kegiatan { min-width: 450px !important; white-space: normal !important; }
+        .text-end { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .indent-detail { padding-left: 30px !important; }
+        .btn-aksi { padding: 2px 8px; font-size: 12px; }
+        
+        /* Input khusus untuk footer (MyIntress) */
+        .input-footer { width: 100px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="m-0 text-primary fw-bold">Monitoring Realisasi Anggaran</h3>
+                <h6 class="text-muted">Istana Kepresidenan Yogyakarta Tahun Anggaran 2026</h6>
+            </div>
+            <div>
+                <a href="home.html" class="btn btn-secondary btn-sm me-2">Kembali ke Beranda</a>
+                <button class="btn btn-success btn-sm" onclick="bukaModalTambah()">+ Tambah Kode/Program</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table table-bordered excel-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="align-middle text-center bg-blue">KODE</th>
+                        <th rowspan="2" class="align-middle text-center bg-blue">PROGRAM / KEGIATAN / KRO / RO / KOMPONEN / SUBKOMPONEN / AKUN / DETIL</th>
+                        
+                        <th colspan="3" class="text-center bg-blue">PAGU ANGGARAN TAHUN 2026</th>
+                        <th colspan="12" class="text-center bg-blue">BULAN</th>
+                        
+                        <th colspan="2" class="text-center bg-blue">REALISASI ANGGARAN (SP2D)</th>
+                        <th colspan="2" class="text-center bg-blue">SISA ANGGARAN</th>
+                        <th class="text-center bg-purple">PROSES DI VERIFIKASI</th>
+                        <th class="text-center bg-purple">PROSES DI PPK (KONTRAK)</th>
+                        <th class="text-center bg-purple">TOTAL PROSES (VERIF & PPK)</th>
+                        <th colspan="2" class="text-center bg-purple">TOTAL REALISASI (SP2D & PROSES)</th>
+                        <th colspan="2" class="text-center bg-purple">SISA ANGGARAN KESELURUHAN</th>
+                        <th rowspan="2" class="align-middle text-center bg-blue">AKSI</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center bg-light-blue">Volume</th><th class="text-center bg-light-blue">Harga Satuan</th><th class="text-center bg-light-blue">Total Pagu</th>
+                        <th class="text-center bg-light-blue">JAN</th><th class="text-center bg-light-blue">FEB</th><th class="text-center bg-light-blue">MAR</th><th class="text-center bg-light-blue">APR</th><th class="text-center bg-light-blue">MEI</th><th class="text-center bg-light-blue">JUN</th><th class="text-center bg-light-blue">JUL</th><th class="text-center bg-light-blue">AGS</th><th class="text-center bg-light-blue">SEP</th><th class="text-center bg-light-blue">OKT</th><th class="text-center bg-light-blue">NOV</th><th class="text-center bg-light-blue">DES</th>
+                        <th class="text-center bg-light-blue">RUPIAH</th><th class="text-center bg-light-blue">%</th>
+                        <th class="text-center bg-light-blue">RUPIAH</th><th class="text-center bg-light-blue">%</th>
+                        <th class="text-center bg-light-purple">RUPIAH</th><th class="text-center bg-light-purple">RUPIAH</th><th class="text-center bg-light-purple">RUPIAH</th>
+                        <th class="text-center bg-light-purple">RUPIAH</th><th class="text-center bg-light-purple">%</th>
+                        <th class="text-center bg-light-purple">RUPIAH</th><th class="text-center bg-light-purple">%</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+                <tfoot id="tableFooter"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL FORM DATA MASTER -->
+    <div class="modal fade" id="modalMasterData" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalJudul">Tambah Kode/Program Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formMasterData">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-success">Induk / Masuk Ke Dalam Grup:</label>
+                                <select class="form-select border-success" id="inputParent">
+                                    <option value="">-- Paling Atas (Tidak Punya Induk) --</option>
+                                </select>
+                            </div>
+                            <hr class="mt-4 mb-2">
+                            
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold">Tingkat / Level</label>
+                                <select class="form-select" id="inputLevel" required>
+                                    <option value="" disabled selected>Pilih Level...</option>
+                                    <option value="Program">1. Program (Merah Muda)</option>
+                                    <option value="Kegiatan">2. Kegiatan (Ungu)</option>
+                                    <option value="KRO">3. KRO (Hijau)</option>
+                                    <option value="RO">4. RO (Tebal)</option>
+                                    <option value="Komponen">5. Komponen (Tebal)</option>
+                                    <option value="Subkomponen">6. Subkomponen (Miring)</option>
+                                    <option value="Akun">7. Akun (Garis Bawah)</option>
+                                    <option value="Detail">8. Detail Anggaran (Strip)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold">Kode</label>
+                                <input type="text" class="form-control" id="inputKode">
+                            </div>
+
+                            <div class="col-md-12 d-none" id="containerSubbagian">
+                                <label class="form-label fw-bold text-primary">Tautkan ke Judul Subbagian</label>
+                                <select class="form-select border-primary" id="inputSubbagian">
+                                    <option value="" disabled selected>-- Pilih Subbagian --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Uraian (Nama Program/Kegiatan/Akun)</label>
+                                <input type="text" class="form-control" id="inputUraian" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Volume / Lama Layanan</label>
+                                <input type="text" class="form-control" id="inputVolume" placeholder="Contoh: 1.00 LAYANAN">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Harga Satuan (Rp)</label>
+                                <input type="number" class="form-control" id="inputHargaSatuan" placeholder="0">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Pagu Anggaran Tahun 2026 (Rp)</label>
+                                <input type="number" class="form-control" id="inputPagu" placeholder="0" value="0" readonly style="background-color: #e9ecef;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = 'login.html'; }
+
+        const API_URL = 'http://localhost:5000/api/anggaran';
+        const API_SPM = 'http://localhost:5000/api/spm'; 
+        const API_JUDUL_SUBBAGIAN = 'http://localhost:5000/api/realisasi/subbagian-judul'; 
+        
+        const modalElement = document.getElementById('modalMasterData');
+        const bsModal = new bootstrap.Modal(modalElement);
+        
+        let allMasterData = []; 
+        let allSpmData = [];
+        let idEditAktif = null;
+
+        // --- Variabel Global Untuk Kalkulasi MyIntress ---
+        let globalTotalBulan = [0,0,0,0,0,0,0,0,0,0,0,0];
+
+        // --- Event Listener Toggle Level Detail ---
+        document.getElementById('inputLevel').addEventListener('change', function() {
+            const containerSub = document.getElementById('containerSubbagian');
+            const inputSub = document.getElementById('inputSubbagian');
+            if (this.value === 'Detail') { containerSub.classList.remove('d-none'); inputSub.required = true; } 
+            else { containerSub.classList.add('d-none'); inputSub.required = false; inputSub.value = ""; }
+        });
+
+        async function loadDropdownSubbagian() {
+            try {
+                const res = await fetch(API_JUDUL_SUBBAGIAN, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                const select = document.getElementById('inputSubbagian');
+                select.innerHTML = '<option value="" disabled selected>-- Pilih Subbagian --</option>';
+                if(result.status === "success" && result.data) {
+                    result.data.forEach(item => { select.innerHTML += `<option value="${item.id}">${item.nama_judul}</option>`; });
+                }
+            } catch (error) { console.error("Gagal load judul subbagian:", error); }
+        }
+
+        document.getElementById('inputVolume').addEventListener('input', hitungTotalPagu);
+        document.getElementById('inputHargaSatuan').addEventListener('input', hitungTotalPagu);
+        function hitungTotalPagu() {
+            const volAngka = parseFloat(document.getElementById('inputVolume').value) || 0;
+            const harga = parseFloat(document.getElementById('inputHargaSatuan').value) || 0;
+            document.getElementById('inputPagu').value = volAngka * harga;
+        }
+        function formatUang(angka) { return (!angka || angka === 0 || angka === "0.00") ? "-" : new Intl.NumberFormat('id-ID').format(angka); }
+        function formatPersen(angka) { return (!angka || angka === 0 || isNaN(angka)) ? "-" : angka.toFixed(2) + '%'; }
+
+        function urutkanBerdasarkanInduk(data, parentId = null, depth = 0) {
+            let result = [];
+            let children = data.filter(d => d.parent_id == parentId || (parentId === null && !d.parent_id));
+            children.forEach(child => {
+                child.depth = depth; result.push(child);
+                result = result.concat(urutkanBerdasarkanInduk(data, child.id, depth + 1));
+            });
+            return result;
+        }
+        
+        function updateDropdownInduk(dataTerurut, currentId = null) {
+            const parentSelect = document.getElementById('inputParent');
+            parentSelect.innerHTML = '<option value="">-- Paling Atas (Tidak Punya Induk) --</option>';
+            dataTerurut.forEach(item => {
+                if(item.id !== currentId) {
+                    const opt = document.createElement('option'); opt.value = item.id;
+                    opt.textContent = `${'\u00A0\u00A0\u00A0\u00A0'.repeat(item.depth)}${item.kode || ''} - ${item.uraian}`;
+                    parentSelect.appendChild(opt);
+                }
+            });
+        }
+        
+        function hitungAgregasi(node, allData) {
+            let children = allData.filter(d => d.parent_id === node.id);
+            if (children.length > 0) {
+                node.bulan = [0,0,0,0,0,0,0,0,0,0,0,0];
+                node.total_sp2d = 0; node.proses_verifikasi = 0; node.proses_ppk = 0;
+                let sumPagu = 0; 
+                children.forEach(child => {
+                    hitungAgregasi(child, allData); 
+                    sumPagu += Number(child.pagu) || 0; node.total_sp2d += child.total_sp2d;
+                    node.proses_verifikasi += child.proses_verifikasi; node.proses_ppk += child.proses_ppk;
+                    for(let i=0; i<12; i++) node.bulan[i] += child.bulan[i];
+                });
+                if (!node.pagu || node.pagu == 0) node.pagu = sumPagu;
+            }
+        }
+
+        // --- Fungsi Logika MyIntress & Rekonsiliasi (Real-time) ---
+        function hitungSelisihBulanan(idx) {
+            const totalReal = globalTotalBulan[idx] || 0;
+            const myIntress = parseFloat(document.getElementById(`myintress_${idx}`).value) || 0;
+            const rekon = parseFloat(document.getElementById(`rekon_${idx}`).value) || 0;
+
+            const selisih = totalReal - myIntress;
+            const selisihAkhir = selisih + rekon;
+
+            const elSelisih = document.getElementById(`selisih_${idx}`);
+            const elSelisihAkhir = document.getElementById(`selisihAkhir_${idx}`);
+
+            elSelisih.innerText = formatUang(selisih);
+            elSelisihAkhir.innerText = formatUang(selisihAkhir);
+
+            elSelisih.className = selisih < 0 ? 'text-end fw-bold text-danger' : 'text-end fw-bold';
+            elSelisihAkhir.className = selisihAkhir < 0 ? 'text-end fw-bold text-danger' : 'text-end fw-bold';
+        }
+        
+        async function loadMasterData() {
+            try {
+                const [resAnggaran, resSpm] = await Promise.all([
+                    fetch(API_URL, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(API_SPM, { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                const resultAnggaran = await resAnggaran.json();
+                const resultSpm = await resSpm.json();
+                const tableBody = document.getElementById('tableBody');
+                const tableFooter = document.getElementById('tableFooter');
+                tableBody.innerHTML = ''; tableFooter.innerHTML = '';
+
+                if(resultAnggaran.data && resultAnggaran.data.length > 0) {
+                    allMasterData = resultAnggaran.data;
+                    allSpmData = resultSpm.data || [];
+                    allMasterData.forEach(item => { item.bulan = [0,0,0,0,0,0,0,0,0,0,0,0]; item.total_sp2d = 0; item.proses_verifikasi = 0; item.proses_ppk = 0; });
+                    allSpmData.forEach(spm => {
+                        const leafNode = allMasterData.find(m => m.uraian === spm.kegiatan);
+                        if (leafNode) {
+                            if (spm.proses && spm.proses.toLowerCase() === 'selesai') {
+                                if (spm.sp2d_tanggal) {
+                                    const monthIndex = new Date(spm.sp2d_tanggal).getMonth(); 
+                                    if (monthIndex >= 0 && monthIndex <= 11) {
+                                        leafNode.bulan[monthIndex] += Number(spm.sp2d_nilai) || 0;
+                                        leafNode.total_sp2d += Number(spm.sp2d_nilai) || 0;
+                                    }
+                                }
+                            } else {
+                                if (spm.kontrak && spm.kontrak.trim() !== '') leafNode.proses_ppk += Number(spm.verifikasi_nilai) || 0;
+                                else leafNode.proses_verifikasi += Number(spm.verifikasi_nilai) || 0;
+                            }
+                        }
+                    });
+
+                    const rootNodes = allMasterData.filter(d => !d.parent_id);
+                    rootNodes.forEach(root => hitungAgregasi(root, allMasterData));
+
+                    // Reset Variabel Grand Total
+                    let gtPagu = 0, gtSp2d = 0, gtVerif = 0, gtPpk = 0;
+                    globalTotalBulan = [0,0,0,0,0,0,0,0,0,0,0,0];
+
+                    rootNodes.forEach(root => {
+                        gtPagu += Number(root.pagu) || 0;
+                        gtSp2d += Number(root.total_sp2d) || 0;
+                        gtVerif += Number(root.proses_verifikasi) || 0;
+                        gtPpk += Number(root.proses_ppk) || 0;
+                        for(let i=0; i<12; i++) globalTotalBulan[i] += root.bulan[i];
+                    });
+
+                    const dataTerkelompok = urutkanBerdasarkanInduk(allMasterData, null, 0);
+                    
+                    dataTerkelompok.forEach((item) => {
+                        let kodeClass = '', uraianClass = 'col-kegiatan', kodeHtml = item.kode || '', uraianHtml = item.uraian || '';
+                        switch(item.level) {
+                            case 'Subkomponen': kodeClass = 'text-center'; break;
+                            case 'Akun': kodeClass = 'text-center'; uraianHtml = `<u>${item.uraian}</u>`; break;
+                            case 'Detail': kodeHtml = ''; uraianClass += ' indent-detail'; uraianHtml = `- ${item.uraian}`; break;
+                        }
+                        
+                        let pagu = Number(item.pagu) || 0;
+                        let sp2d = item.total_sp2d, persenSp2d = pagu > 0 ? (sp2d / pagu) * 100 : 0;
+                        let sisaSp2d = pagu - sp2d, persenSisaSp2d = pagu > 0 ? (sisaSp2d / pagu) * 100 : 0;
+                        let totalProses = item.proses_verifikasi + item.proses_ppk;
+                        let totalRealisasi = sp2d + totalProses, persenTotalRealisasi = pagu > 0 ? (totalRealisasi / pagu) * 100 : 0;
+                        let sisaAkhir = pagu - totalRealisasi, persenSisaAkhir = pagu > 0 ? (sisaAkhir / pagu) * 100 : 0;
+                        
+                        const tr = document.createElement('tr');
+                        tr.className = `row-${item.level}`;
+                        tr.innerHTML = `
+                            <td class="${kodeClass}">${kodeHtml}</td><td class="${uraianClass}">${uraianHtml}</td>
+                            <td class="text-center">${item.volume || '-'}</td><td class="text-end">${formatUang(item.harga_satuan)}</td><td class="text-end text-success fw-bold">${formatUang(pagu)}</td>
+                            ${item.bulan.map(val => `<td class="text-end">${formatUang(val)}</td>`).join('')}
+                            <td class="text-end fw-bold">${formatUang(sp2d)}</td><td class="text-end fw-bold">${formatPersen(persenSp2d)}</td>
+                            <td class="text-end fw-bold ${sisaSp2d < 0 ? 'text-danger' : 'text-primary'}">${formatUang(sisaSp2d)}</td><td class="text-end fw-bold ${sisaSp2d < 0 ? 'text-danger' : 'text-primary'}">${formatPersen(persenSisaSp2d)}</td>
+                            <td class="text-end">${formatUang(item.proses_verifikasi)}</td><td class="text-end">${formatUang(item.proses_ppk)}</td><td class="text-end">${formatUang(totalProses)}</td>
+                            <td class="text-end fw-bold text-success">${formatUang(totalRealisasi)}</td><td class="text-end fw-bold text-success">${formatPersen(persenTotalRealisasi)}</td>
+                            <td class="text-end fw-bold ${sisaAkhir < 0 ? 'text-danger' : 'text-primary'}">${formatUang(sisaAkhir)}</td><td class="text-end fw-bold ${sisaAkhir < 0 ? 'text-danger' : 'text-primary'}">${formatPersen(persenSisaAkhir)}</td>
+                            <td class="text-center"><button class="btn btn-warning btn-aksi me-1" onclick="siapkanEdit(${item.id})">Edit</button><button class="btn btn-danger btn-aksi" onclick="hapusData(${item.id})">Hapus</button></td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+
+                    // --- RENDER FOOTER (GRAND TOTAL & 5 BARIS KHUSUS) ---
+                    let gtTotalProses = gtVerif + gtPpk;
+                    let gtTotalRealisasi = gtSp2d + gtTotalProses;
+                    let gtSisaSp2d = gtPagu - gtSp2d;
+                    let gtSisaAkhir = gtPagu - gtTotalRealisasi;
+
+                    let htmlFooter = `
+                        <!-- 1. Baris Grand Total Seluruh Kolom -->
+                        <tr style="background-color: #d1e7dd; border-top: 3px solid #000;">
+                            <td colspan="4" class="text-end fw-bold">TOTAL KESELURUHAN</td>
+                            <td class="text-end fw-bold">${formatUang(gtPagu)}</td>
+                            ${globalTotalBulan.map(val => `<td class="text-end fw-bold">${formatUang(val)}</td>`).join('')}
+                            <td class="text-end fw-bold">${formatUang(gtSp2d)}</td>
+                            <td class="text-end fw-bold">${formatPersen(gtPagu > 0 ? (gtSp2d/gtPagu)*100 : 0)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtSisaSp2d)}</td>
+                            <td class="text-end fw-bold">${formatPersen(gtPagu > 0 ? (gtSisaSp2d/gtPagu)*100 : 0)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtVerif)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtPpk)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtTotalProses)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtTotalRealisasi)}</td>
+                            <td class="text-end fw-bold">${formatPersen(gtPagu > 0 ? (gtTotalRealisasi/gtPagu)*100 : 0)}</td>
+                            <td class="text-end fw-bold">${formatUang(gtSisaAkhir)}</td>
+                            <td class="text-end fw-bold">${formatPersen(gtPagu > 0 ? (gtSisaAkhir/gtPagu)*100 : 0)}</td>
+                            <td></td>
+                        </tr>
+                        
+                        <!-- 2. Lima Baris Perhitungan Bulanan -->
+                        <tr>
+                            <td colspan="5" class="text-end">Total Realisasi</td>
+                            ${globalTotalBulan.map((val, idx) => `<td class="text-end fw-bold" id="totReal_${idx}">${formatUang(val)}</td>`).join('')}
+                            <td colspan="12" rowspan="5" class="align-middle text-center text-muted fst-italic">Area Kalkulasi Bulanan</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end">MyIntress</td>
+                            ${globalTotalBulan.map((val, idx) => `<td class="text-end"><input type="number" class="form-control form-control-sm text-end input-footer" id="myintress_${idx}" placeholder="0" oninput="hitungSelisihBulanan(${idx})"></td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end">Selisih</td>
+                            ${globalTotalBulan.map((val, idx) => `<td class="text-end fw-bold" id="selisih_${idx}">0</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end">Rekonsiliasi</td>
+                            ${globalTotalBulan.map((val, idx) => `<td class="text-end"><input type="number" class="form-control form-control-sm text-end input-footer" id="rekon_${idx}" placeholder="0" oninput="hitungSelisihBulanan(${idx})"></td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold">Selisih Akhir</td>
+                            ${globalTotalBulan.map((val, idx) => `<td class="text-end fw-bold" id="selisihAkhir_${idx}">0</td>`).join('')}
+                        </tr>
+                    `;
+                    tableFooter.innerHTML = htmlFooter;
+                    
+                    // Inisialisasi awal selisih agar angka 0 muncul dengan format yang benar
+                    for(let i=0; i<12; i++) hitungSelisihBulanan(i);
+
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function bukaModalTambah() {
+            idEditAktif = null; document.getElementById('formMasterData').reset();
+            document.getElementById('modalJudul').innerText = "Tambah Kode/Program Baru";
+            document.getElementById('containerSubbagian').classList.add('d-none'); document.getElementById('inputSubbagian').required = false;
+            updateDropdownInduk(urutkanBerdasarkanInduk(allMasterData, null, 0), null);
+            bsModal.show();
+        }
+        
+        function siapkanEdit(id) {
+            idEditAktif = id; document.getElementById('modalJudul').innerText = "Edit Data Anggaran";
+            const item = allMasterData.find(x => x.id === id);
+            if(item) {
+                updateDropdownInduk(urutkanBerdasarkanInduk(allMasterData, null, 0), id);
+                document.getElementById('inputParent').value = item.parent_id || '';
+                document.getElementById('inputLevel').value = item.level; document.getElementById('inputKode').value = item.kode;
+                document.getElementById('inputUraian').value = item.uraian; document.getElementById('inputVolume').value = item.volume || '';
+                document.getElementById('inputHargaSatuan').value = item.harga_satuan || ''; document.getElementById('inputPagu').value = item.pagu;
+                
+                const containerSub = document.getElementById('containerSubbagian');
+                const inputSub = document.getElementById('inputSubbagian');
+                if (item.level === 'Detail') { containerSub.classList.remove('d-none'); inputSub.required = true; inputSub.value = item.judul_subbagian_id || ''; } 
+                else { containerSub.classList.add('d-none'); inputSub.required = false; inputSub.value = ''; }
+                bsModal.show();
+            }
+        }
+        
+        document.getElementById('formMasterData').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const payload = {
+                parent_id: document.getElementById('inputParent').value || null, level: document.getElementById('inputLevel').value,
+                kode: document.getElementById('inputKode').value, uraian: document.getElementById('inputUraian').value,
+                volume: document.getElementById('inputVolume').value, harga_satuan: document.getElementById('inputHargaSatuan').value || 0,
+                pagu: document.getElementById('inputPagu').value || 0, judul_subbagian_id: document.getElementById('inputSubbagian').value || null
+            };
+            const targetUrl = idEditAktif ? `${API_URL}/${idEditAktif}` : API_URL;
+            try {
+                await fetch(targetUrl, { method: idEditAktif ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
+                bsModal.hide(); loadMasterData(); 
+            } catch (e) { alert("Kesalahan menyimpan data."); }
+        });
+        
+        async function hapusData(id) {
+            if(!confirm("Hapus baris ini?")) return;
+            await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+            loadMasterData();
+        }
+
+        loadDropdownSubbagian();
+        loadMasterData();
+    </script>
+</body>
+</html>

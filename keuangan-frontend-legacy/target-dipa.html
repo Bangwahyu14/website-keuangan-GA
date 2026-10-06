@@ -1,0 +1,177 @@
+Berikut adalah kode lengkap untuk tampilan (frontend) halaman **Target Hal III DIPA**. Tampilan ini dirancang menyerupai gaya dan pewarnaan tabel Excel pada *screenshot* yang kamu kirimkan sebelumnya, menggunakan Bootstrap 5.
+
+Kamu bisa membuat file baru bernama **`target-dipa.html`** (atau nama lain yang sesuai) di folder *frontend* kamu, lalu *copy-paste* kode di bawah ini:
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Hal III DIPA - Sistem Keuangan</title>
+    <!-- Import Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-size: 13px; }
+        .table-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
+        table.excel-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        table.excel-table th, table.excel-table td { border: 1px solid #000; padding: 8px 12px; vertical-align: middle; }
+        
+        /* Pewarnaan Header Berdasarkan Gambar Excel */
+        .bg-blue { background-color: #2962ff !important; color: white; text-align: center; font-weight: bold; font-size: 13px; }
+        .bg-red { background-color: #ff0000 !important; color: white; text-align: center; font-weight: bold; font-size: 13px; }
+        
+        /* Utility Classes */
+        .text-end { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .fw-bold { font-weight: bold !important; }
+        .text-danger { color: #dc3545 !important; }
+        .text-success { color: #198754 !important; }
+        .row-total { background-color: #e9ecef; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="m-0 text-primary fw-bold">Target Penyerapan (Hal III DIPA)</h3>
+                <h6 class="text-muted">Evaluasi Triwulan II Tahun Anggaran 2026</h6>
+            </div>
+            <div>
+                <a href="home.html" class="btn btn-secondary btn-sm">Kembali ke Beranda</a>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table table-bordered excel-table">
+                <thead>
+                    <!-- Baris Header Utama -->
+                    <tr>
+                        <th rowspan="2" class="align-middle bg-blue">Jenis Belanja</th>
+                        <th rowspan="2" class="align-middle bg-blue">PAGU</th>
+                        <th colspan="4" class="bg-blue">REALISASI</th>
+                        <th colspan="2" class="bg-red">TARGET PENYERAPAN TRIWULAN II 2026</th>
+                        <th colspan="2" class="bg-red">LEBIH/(KURANG)</th>
+                    </tr>
+                    <!-- Baris Sub-Header -->
+                    <tr>
+                        <th class="bg-blue">SP2D</th>
+                        <th class="bg-blue">%</th>
+                        <th class="bg-blue">PROSES</th>
+                        <th class="bg-blue">%</th>
+                        
+                        <th class="bg-red">NILAI</th>
+                        <th class="bg-red">%</th>
+                        
+                        <th class="bg-red">NILAI</th>
+                        <th class="bg-red">%</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="10" class="text-center">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 1. Cek Token Login
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Akses ditolak! Anda harus login terlebih dahulu.');
+            window.location.href = 'login.html';
+        }
+
+        // 2. URL API (Sesuaikan port jika berbeda)
+        const API_HAL3_DIPA = 'http://localhost:5000/api/realisasi/hal3-dipa'; 
+
+        // 3. Fungsi Format Angka & Persen
+        function formatUang(angka) { 
+            return (!angka || angka === 0 || isNaN(angka)) ? "-" : new Intl.NumberFormat('id-ID').format(angka); 
+        }
+        
+        function formatPersen(angka) {
+            return (!angka || angka === 0 || isNaN(angka)) ? "-" : angka.toFixed(2) + '%';
+        }
+
+        // 4. Fungsi Mengambil dan Merender Data
+        async function loadTargetDipa() {
+            try {
+                const response = await fetch(API_HAL3_DIPA, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const result = await response.json();
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+
+                if (result.status === "success" && result.data) {
+                    
+                    // Render Baris Data (Akun 51, 52, 53)
+                    result.data.forEach(item => {
+                        // Tentukan warna untuk kolom Lebih/(Kurang)
+                        // Jika minus (kurang dari target), beri warna merah
+                        const warnaSelisih = item.lebih_kurang_nilai < 0 ? 'text-danger' : 'text-success';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${item.jenis_belanja}</td>
+                            <td class="text-end fw-bold">${formatUang(item.pagu)}</td>
+                            
+                            <td class="text-end">${formatUang(item.sp2d_nilai)}</td>
+                            <td class="text-center">${formatPersen(item.sp2d_persen)}</td>
+                            <td class="text-end">${formatUang(item.proses_nilai)}</td>
+                            <td class="text-center">${formatPersen(item.proses_persen)}</td>
+                            
+                            <td class="text-end fw-bold">${formatUang(item.target_nilai)}</td>
+                            <td class="text-center fw-bold">${formatPersen(item.target_persen)}</td>
+                            
+                            <td class="text-end fw-bold ${warnaSelisih}">${formatUang(item.lebih_kurang_nilai)}</td>
+                            <td class="text-center fw-bold ${warnaSelisih}">${formatPersen(item.lebih_kurang_persen)}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+
+                    // Render Baris Total
+                    const total = result.total;
+                    const warnaSelisihTotal = total.lebih_kurang_nilai < 0 ? 'text-danger' : 'text-success';
+                    
+                    const trTotal = document.createElement('tr');
+                    trTotal.className = 'row-total';
+                    trTotal.innerHTML = `
+                        <td class="text-center">TOTAL</td>
+                        <td class="text-end">${formatUang(total.pagu)}</td>
+                        
+                        <td class="text-end">${formatUang(total.sp2d_nilai)}</td>
+                        <td class="text-center">${formatPersen(total.sp2d_persen)}</td>
+                        <td class="text-end">${formatUang(total.proses_nilai)}</td>
+                        <td class="text-center">${formatPersen(total.proses_persen)}</td>
+                        
+                        <td class="text-end">${formatUang(total.target_nilai)}</td>
+                        <td class="text-center">${formatPersen(total.target_persen)}</td>
+                        
+                        <td class="text-end ${warnaSelisihTotal}">${formatUang(total.lebih_kurang_nilai)}</td>
+                        <td class="text-center ${warnaSelisihTotal}">${formatPersen(total.lebih_kurang_persen)}</td>
+                    `;
+                    tableBody.appendChild(trTotal);
+
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="10" class="text-center">Gagal memuat data atau data kosong.</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Error loading Hal III DIPA:", error);
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="10" class="text-center text-danger">Terjadi kesalahan saat terhubung ke server API.</td></tr>`;
+            }
+        }
+
+        // Panggil fungsi saat halaman selesai dimuat
+        loadTargetDipa();
+    </script>
+</body>
+</html>
+
+```

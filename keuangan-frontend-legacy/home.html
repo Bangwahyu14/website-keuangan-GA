@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beranda - Sistem Manajemen Keuangan</title>
+    <!-- Import Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Efek melayang saat kursor diarahkan ke menu */
+        .menu-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            border: none;
+            border-radius: 10px;
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bilah Navigasi (Navbar) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Sistem Keuangan</a>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text text-white me-4" id="userInfo">
+                    Memuat...
+                </span>
+                <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Konten Utama (Daftar Menu) -->
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Selamat Datang di Sistem Manajemen Keuangan</h2>
+            <p class="text-muted">Silakan pilih modul operasional di bawah ini.</p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <!-- Menu 1: Rincian SPM (Sudah Aktif) -->
+            <div class="col-md-4">
+                <a href="rincian-spm.html" class="card menu-card h-100 p-3 text-center shadow-sm border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3">Rincian SPM</h4>
+                        <p class="card-text text-muted">Kelola pencatatan data transaksi SPM dan SP2D.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Menu 2: Realisasi 2026 (Sudah Aktif) -->
+            <div class="col-md-4">
+                <a href="realisasi-2026.html" class="card menu-card h-100 p-3 text-center shadow-sm border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3">Realisasi 2026</h4>
+                        <p class="card-text text-muted">Lihat rekapitulasi total pagu dan serapan anggaran tahun berjalan.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Menu 3: Realisasi Per Subbagian (Sudah Aktif) -->
+            <div class="col-md-4">
+                <a href="realisasi-subbagian.html" class="card menu-card h-100 p-3 text-center shadow-sm border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3">Realisasi Per Subbagian</h4>
+                        <p class="card-text text-muted">Pantau serapan anggaran berdasarkan unit kerja secara detail.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Menu 4: Analisa Realisasi (Sudah Aktif) -->
+            <div class="col-md-4">
+                <a href="analisis-realisasi.html" class="card menu-card h-100 p-3 text-center shadow-sm border-primary">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3">Analisa Realisasi</h4>
+                        <p class="card-text text-muted">Dashboard visualisasi grafik kinerja keuangan instansi.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Menu 5: Target Hal III DIPA (Belum Dibuat) -->
+            <div class="col-md-4">
+                <a href="#" onclick="alert('Halaman Target Hal III DIPA sedang dalam pengembangan!')" class="card menu-card h-100 p-3 text-center shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title mb-3 text-secondary">Target Hal III DIPA</h4>
+                        <p class="card-text text-muted">Kelola master data anggaran dan target pencairan per periode.</p>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script Proteksi Halaman dan Fungsionalitas -->
+    <script>
+        // 1. Pengecekan Keamanan: Pastikan user sudah login
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        if (!token) {
+            alert('Akses ditolak! Anda harus login terlebih dahulu.');
+            window.location.href = 'login.html'; // Arahkan kembali ke halaman login
+        }
+
+        // 2. Tampilkan informasi user di Navbar
+        if (role) {
+            document.getElementById('userInfo').innerText = `Peran Aktif: ${role}`;
+        }
+
+        // 3. Fungsi Logout
+        function logout() {
+            if(confirm('Apakah Anda yakin ingin keluar?')) {
+                localStorage.removeItem('token'); // Hapus token otorisasi
+                localStorage.removeItem('role');  // Hapus data role
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

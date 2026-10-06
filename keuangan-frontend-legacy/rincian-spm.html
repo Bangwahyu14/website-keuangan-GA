@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rincian SPM - Sistem Keuangan</title>
+    <!-- Import Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-size: 13px; }
+        .table-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
+        table.excel-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        table.excel-table th, table.excel-table td { border: 1px solid #dee2e6; padding: 5px 8px; vertical-align: middle; }
+        table.excel-table thead th { background-color: #0073C2; color: white; text-align: center; font-weight: bold; border: 1px solid #005691; }
+        table.excel-table tbody tr:nth-of-type(odd) { background-color: #f9f9f9; }
+        table.excel-table tbody tr:hover { background-color: #e2e6ea; }
+        .btn-aksi { padding: 2px 8px; font-size: 12px; }
+        /* Input yang terkunci (disabled) */
+        input:disabled { background-color: #e9ecef !important; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="m-0 text-primary fw-bold">Data Rincian SPM dan SP2D</h3>
+            <div>
+                <a href="home.html" class="btn btn-secondary btn-sm me-2">Kembali ke Beranda</a>
+                <button class="btn btn-success btn-sm" onclick="bukaModalTambah()">+ Tambah Data</button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="table excel-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2">No.</th>
+                        <th rowspan="2">Rekanan</th>
+                        <th colspan="5">Proses Verifikasi</th>
+                        <th colspan="4">Nomor Akun</th>
+                        <th colspan="3">SPM</th>
+                        <th colspan="3">SP2D</th>
+                        <th rowspan="2">Type</th>
+                        <th rowspan="2">Keterangan</th>
+                        <th rowspan="2">Aksi</th>
+                    </tr>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Nomor</th>
+                        <th>Nilai</th>
+                        <th>Proses</th>
+                        <th>Kontrak</th>
+                        <th>KRO</th>
+                        <th>RO</th>
+                        <th>Akun</th>
+                        <th>Kegiatan</th>
+                        <th>Tanggal</th>
+                        <th>Nomor</th>
+                        <th>Nilai</th>
+                        <th>Tanggal</th>
+                        <th>Nomor</th>
+                        <th>Nilai</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="21" class="text-center">Memuat data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL FORM DATA -->
+    <div class="modal fade" id="modalFormData" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalJudul">Input Rincian SPM Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formRincianData">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Rekanan</label>
+                                <input type="text" class="form-control" id="inputRekanan" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Tipe</label>
+                                <select class="form-select" id="inputType" required>
+                                    <option value="LS">LS</option>
+                                    <option value="GU">GU</option>
+                                    <option value="KKP">KKP</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Keterangan</label>
+                                <input type="text" class="form-control" id="inputKeterangan">
+                            </div>
+
+                            <hr class="mt-4 mb-2">
+                            
+                            <h6 class="text-primary fw-bold">Proses Verifikasi</h6>
+                            <div class="col-md-2"><label class="form-label">Tanggal</label><input type="date" class="form-control" id="verifikasiTanggal"></div>
+                            <div class="col-md-3"><label class="form-label">Nomor</label><input type="text" class="form-control" id="verifikasiNomor"></div>
+                            <div class="col-md-3"><label class="form-label">Nilai (Rp)</label><input type="number" class="form-control" id="verifikasiNilai" value="0"></div>
+                            <div class="col-md-2">
+                                <label class="form-label">Proses</label>
+                                <select class="form-select" id="verifikasiProses" onchange="cekStatusProses()" required>
+                                    <option value="Proses">Proses</option>
+                                    <option value="Selesai">Selesai</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"><label class="form-label">Kontrak</label><input type="text" class="form-control" id="verifikasiKontrak"></div>
+
+                            <hr class="mt-4 mb-2">
+
+                            <h6 class="text-primary fw-bold">Klasifikasi Akun & Kegiatan</h6>
+                            <div class="col-md-3">
+                                <label class="form-label">KRO</label>
+                                <!-- onchange diubah untuk memanggil API Load RO -->
+                                <select class="form-select" id="akunKro" onchange="loadDropdownRO(this.value)" required>
+                                    <option value="" disabled selected>Memuat KRO...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">RO</label>
+                                <!-- onchange diubah untuk memanggil API Load Akun -->
+                                <select class="form-select" id="akunRo" onchange="loadDropdownAkun(this.value)" required>
+                                    <option value="" disabled selected>Pilih KRO terlebih dahulu...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Nomor Akun</label>
+                                <!-- onchange diubah untuk memanggil API Load Kegiatan -->
+                                <select class="form-select" id="akunNomor" onchange="loadDropdownKegiatan(this.value)" required>
+                                    <option value="" disabled selected>Pilih RO terlebih dahulu...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Kegiatan / Detil</label>
+                                <select class="form-select" id="akunKegiatan" required>
+                                    <option value="" disabled selected>Pilih Akun terlebih dahulu...</option>
+                                </select>
+                            </div>
+
+                            <hr class="mt-4 mb-2">
+
+                            <div class="col-md-6">
+                                <h6 class="text-primary fw-bold">Data SPM</h6>
+                                <div class="row g-2">
+                                    <div class="col-4"><label class="form-label">Tanggal</label><input type="date" class="form-control" id="spmTanggal"></div>
+                                    <div class="col-4"><label class="form-label">Nomor</label><input type="text" class="form-control" id="spmNomor"></div>
+                                    <div class="col-4"><label class="form-label">Nilai (Rp)</label><input type="number" class="form-control" id="spmNilai" value="0"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary fw-bold">Data SP2D</h6>
+                                <div class="row g-2">
+                                    <div class="col-4"><label class="form-label">Tanggal</label><input type="date" class="form-control" id="sp2dTanggal"></div>
+                                    <div class="col-4"><label class="form-label">Nomor</label><input type="text" class="form-control" id="sp2dNomor"></div>
+                                    <div class="col-4"><label class="form-label">Nilai (Rp)</label><input type="number" class="form-control" id="sp2dNilai" value="0"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Sesi Anda telah habis. Silakan login kembali.');
+            window.location.href = 'login.html';
+        }
+
+        const API_SPM = 'http://localhost:5000/api/spm';
+        const API_ANGGARAN = 'http://localhost:5000/api/anggaran';
+        const modalElement = document.getElementById('modalFormData');
+        const bsModal = new bootstrap.Modal(modalElement);
+        
+        let allDataSpm = []; 
+        let idEditAktif = null; 
+
+        // ==========================================
+        // UTILITY FUNCTIONS
+        // ==========================================
+        function formatUang(angka) { return (!angka || angka == 0) ? "-" : new Intl.NumberFormat('id-ID').format(angka); }
+        function formatTanggalTabel(tglStr) {
+            if(!tglStr || tglStr === '0000-00-00') return "-";
+            const d = new Date(tglStr); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+        function formatTanggalInput(tglStr) {
+            if(!tglStr || tglStr === '0000-00-00') return "";
+            const d = new Date(tglStr); return d.toISOString().split('T')[0];
+        }
+        
+        function getSelectedText(selectId) {
+            const el = document.getElementById(selectId);
+            if(el.selectedIndex === -1 || !el.value) return "";
+            return el.options[el.selectedIndex].getAttribute('data-text') || "";
+        }
+
+        function setSelectByText(selectId, text) {
+            const sel = document.getElementById(selectId);
+            for(let i=0; i<sel.options.length; i++) {
+                if(sel.options[i].getAttribute('data-text') === text || sel.options[i].text === text) {
+                    sel.selectedIndex = i;
+                    return sel.value; 
+                }
+            }
+            return null;
+        }
+
+        // ==========================================
+        // KUNCI FORM SPM & SP2D (PROSES VS SELESAI)
+        // ==========================================
+        function cekStatusProses() {
+            const statusProses = document.getElementById('verifikasiProses').value;
+            const isTerkunci = (statusProses !== 'Selesai');
+
+            // Tanggal, Nomor, dan Nilai SP2D dikunci jika "Proses", dibuka jika "Selesai"
+            document.getElementById('spmTanggal').disabled = isTerkunci;
+            document.getElementById('spmNomor').disabled = isTerkunci;
+            
+            document.getElementById('sp2dTanggal').disabled = isTerkunci;
+            document.getElementById('sp2dNomor').disabled = isTerkunci;
+            document.getElementById('sp2dNilai').disabled = isTerkunci; // SP2D tetap bisa diedit saat Selesai
+            
+            // Ambil nilai dari input Verifikasi
+            const nilaiVerifikasi = document.getElementById('verifikasiNilai').value;
+            
+            if (isTerkunci) {
+                // Jika kembali ke status Proses (saat input baru)
+                if (!idEditAktif) {
+                    document.getElementById('spmTanggal').value = '';
+                    document.getElementById('spmNomor').value = '';
+                    document.getElementById('spmNilai').value = 0;
+                    document.getElementById('sp2dTanggal').value = '';
+                    document.getElementById('sp2dNomor').value = '';
+                    document.getElementById('sp2dNilai').value = 0;
+                }
+                
+                // Kembalikan input Nilai SPM seperti semula (bisa diedit manual)
+                document.getElementById('spmNilai').disabled = true; // Terkunci karena masih Proses
+                document.getElementById('spmNilai').readOnly = false;
+                document.getElementById('spmNilai').style.backgroundColor = '';
+                
+            } else {
+                // JIKA STATUS SELESAI: 
+                // 1. Otomatis samakan HANYA Nilai SPM dengan Nilai Verifikasi
+                document.getElementById('spmNilai').value = nilaiVerifikasi;
+                
+                // 2. Kunci kolom Nilai SPM agar tidak bisa diedit manual
+                document.getElementById('spmNilai').disabled = false; // Buka disable-nya
+                document.getElementById('spmNilai').readOnly = true;  // Ubah jadi ReadOnly
+                
+                // 3. Beri warna abu-abu otomatis pada Nilai SPM
+                document.getElementById('spmNilai').style.backgroundColor = '#e9ecef';
+            }
+        }
+
+        // Event Listener agar saat user mengetik angka di Verifikasi,
+        // HANYA Nilai SPM yang ikut berubah secara live.
+        document.getElementById('verifikasiNilai').addEventListener('input', function() {
+            const statusProses = document.getElementById('verifikasiProses').value;
+            if (statusProses === 'Selesai') {
+                document.getElementById('spmNilai').value = this.value;
+            }
+        });
+
+        // ==========================================
+        // CASCADING DROPDOWN VIA API
+        // ==========================================
+        async function loadDropdownKRO() {
+            try {
+                const res = await fetch(`${API_ANGGARAN}/kro`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                const selKro = document.getElementById('akunKro');
+                
+                selKro.innerHTML = '<option value="" disabled selected>Pilih KRO...</option>';
+                
+                if(result.data) {
+                    result.data.forEach(item => {
+                        selKro.innerHTML += `<option value="${item.id}" data-text="${item.kode}">${item.kode}</option>`;
+                    });
+                }
+            } catch(e) { console.error("Gagal memuat KRO", e); }
+        }
+
+        async function loadDropdownRO(parentId) {
+            const selRo = document.getElementById('akunRo');
+            selRo.innerHTML = '<option value="" disabled selected>Pilih RO...</option>';
+            document.getElementById('akunNomor').innerHTML = '<option value="" disabled selected>Pilih RO terlebih dahulu...</option>';
+            document.getElementById('akunKegiatan').innerHTML = '<option value="" disabled selected>Pilih Akun terlebih dahulu...</option>';
+            
+            if(!parentId) return;
+
+            try {
+                const res = await fetch(`${API_ANGGARAN}/ro?parentId=${parentId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if(result.data) {
+                    result.data.forEach(item => {
+                        selRo.innerHTML += `<option value="${item.id}" data-text="${item.kode}">${item.kode}</option>`;
+                    });
+                }
+            } catch(e) { console.error("Gagal memuat RO", e); }
+        }
+
+        async function loadDropdownAkun(parentId) {
+            const selAkun = document.getElementById('akunNomor');
+            selAkun.innerHTML = '<option value="" disabled selected>Pilih Akun...</option>';
+            document.getElementById('akunKegiatan').innerHTML = '<option value="" disabled selected>Pilih Akun terlebih dahulu...</option>';
+            
+            if(!parentId) return;
+
+            try {
+                const res = await fetch(`${API_ANGGARAN}/akun?parentId=${parentId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if(result.data) {
+                    result.data.forEach(item => {
+                        selAkun.innerHTML += `<option value="${item.id}" data-text="${item.kode}">${item.kode}</option>`;
+                    });
+                }
+            } catch(e) { console.error("Gagal memuat Akun", e); }
+        }
+
+        async function loadDropdownKegiatan(parentId) {
+            const selKegiatan = document.getElementById('akunKegiatan');
+            selKegiatan.innerHTML = '<option value="" disabled selected>Pilih Detail / Kegiatan...</option>';
+            
+            if(!parentId) return;
+
+            try {
+                const res = await fetch(`${API_ANGGARAN}/kegiatan?parentId=${parentId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if(result.data) {
+                    result.data.forEach(item => {
+                        selKegiatan.innerHTML += `<option value="${item.id}" data-text="${item.uraian}">${item.uraian}</option>`;
+                    });
+                }
+            } catch(e) { console.error("Gagal memuat Kegiatan", e); }
+        }
+
+        // ==========================================
+        // LOAD DATA UTAMA & FORM EDIT
+        // ==========================================
+        async function loadDataSPM() {
+            try {
+                const response = await fetch(API_SPM, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await response.json();
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+
+                if(result.data && result.data.length > 0) {
+                    allDataSpm = result.data; 
+                    result.data.forEach((item, index) => {
+                        const isSelesai = (item.proses && item.proses.toLowerCase() === 'selesai');
+                        
+                        const spmTanggal = isSelesai ? formatTanggalTabel(item.spm_tanggal) : '-';
+                        const spmNomor   = isSelesai ? (item.spm_nomor || '-') : '-';
+                        const spmNilai   = isSelesai ? formatUang(item.spm_nilai) : '-';
+                        const sp2dTanggal = isSelesai ? formatTanggalTabel(item.sp2d_tanggal) : '-';
+                        const sp2dNomor   = isSelesai ? (item.sp2d_nomor || '-') : '-';
+                        const sp2dNilai   = isSelesai ? formatUang(item.sp2d_nilai) : '-';
+
+                        let badgeClass = isSelesai ? 'bg-success text-white' : 'bg-warning text-dark';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-center">${index + 1}</td>
+                            <td>${item.rekanan || '-'}</td>
+                            <td class="text-center">${formatTanggalTabel(item.verifikasi_tanggal)}</td>
+                            <td>${item.verifikasi_nomor || '-'}</td>
+                            <td class="text-end">${formatUang(item.verifikasi_nilai)}</td>
+                            <td class="text-center"><span class="badge ${badgeClass}">${item.proses || '-'}</span></td>
+                            <td class="text-center">${item.kontrak || '-'}</td>
+                            <td class="text-center text-primary fw-bold">${item.kro || '-'}</td>
+                            <td class="text-center text-success fw-bold">${item.ro || '-'}</td>
+                            <td class="text-center fw-bold">${item.nomor_akun || '-'}</td>
+                            <td>${item.kegiatan || '-'}</td>
+                            <td class="text-center">${spmTanggal}</td>
+                            <td>${spmNomor}</td>
+                            <td class="text-end">${spmNilai}</td>
+                            <td class="text-center">${sp2dTanggal}</td>
+                            <td>${sp2dNomor}</td>
+                            <td class="text-end">${sp2dNilai}</td>
+                            <td class="text-center">${item.tipe || '-'}</td>
+                            <td>${item.keterangan || '-'}</td>
+                            <td class="text-center">
+                                <button class="btn btn-warning btn-aksi me-1" onclick="siapkanEdit(${item.id})">Edit</button>
+                                <button class="btn btn-danger btn-aksi" onclick="hapusData(${item.id})">Hapus</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="21" class="text-center">Belum ada data transaksi.</td></tr>`;
+                }
+            } catch (error) {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="21" class="text-center text-danger">Gagal memuat data.</td></tr>`;
+            }
+        }
+
+        function bukaModalTambah() {
+            idEditAktif = null; 
+            document.getElementById('formRincianData').reset();
+            document.getElementById('modalJudul').innerText = "Input Rincian SPM Baru";
+            document.getElementById('verifikasiProses').value = "Proses"; 
+            cekStatusProses(); 
+            
+            // Reset Dropdown
+            document.getElementById('akunKro').value = '';
+            document.getElementById('akunRo').innerHTML = '<option value="" disabled selected>Pilih KRO terlebih dahulu...</option>';
+            document.getElementById('akunNomor').innerHTML = '<option value="" disabled selected>Pilih RO terlebih dahulu...</option>';
+            document.getElementById('akunKegiatan').innerHTML = '<option value="" disabled selected>Pilih Akun terlebih dahulu...</option>';
+            
+            bsModal.show();
+        }
+
+        async function siapkanEdit(id) {
+            idEditAktif = id; 
+            document.getElementById('modalJudul').innerText = "Edit Rincian SPM";
+            const item = allDataSpm.find(x => x.id === id);
+            
+            if(item) {
+                document.getElementById('inputRekanan').value = item.rekanan || '';
+                document.getElementById('inputType').value = item.tipe || 'LS';
+                document.getElementById('inputKeterangan').value = item.keterangan || '';
+                document.getElementById('verifikasiTanggal').value = formatTanggalInput(item.verifikasi_tanggal);
+                document.getElementById('verifikasiNomor').value = item.verifikasi_nomor || '';
+                document.getElementById('verifikasiNilai').value = item.verifikasi_nilai || 0;
+                document.getElementById('verifikasiProses').value = item.proses || 'Proses';
+                document.getElementById('verifikasiKontrak').value = item.kontrak || '';
+                
+                // Proses Cascading Edit
+                const kroId = setSelectByText('akunKro', item.kro);
+                if(kroId) {
+                    await loadDropdownRO(kroId);
+                    const roId = setSelectByText('akunRo', item.ro);
+                    
+                    if(roId) {
+                        await loadDropdownAkun(roId);
+                        const akunId = setSelectByText('akunNomor', item.nomor_akun);
+                        
+                        if(akunId) {
+                            await loadDropdownKegiatan(akunId);
+                            setSelectByText('akunKegiatan', item.kegiatan);
+                        }
+                    }
+                }
+                
+                document.getElementById('spmTanggal').value = formatTanggalInput(item.spm_tanggal);
+                document.getElementById('spmNomor').value = item.spm_nomor || '';
+                document.getElementById('spmNilai').value = item.spm_nilai || 0;
+                document.getElementById('sp2dTanggal').value = formatTanggalInput(item.sp2d_tanggal);
+                document.getElementById('sp2dNomor').value = item.sp2d_nomor || '';
+                document.getElementById('sp2dNilai').value = item.sp2d_nilai || 0;
+                
+                cekStatusProses(); 
+                bsModal.show();
+            }
+        }
+
+        // ==========================================
+        // SUBMIT & HAPUS DATA
+        // ==========================================
+        document.getElementById('formRincianData').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const inputs = document.querySelectorAll('#formRincianData input');
+            inputs.forEach(input => input.disabled = false);
+
+            const btnSimpan = document.getElementById('btnSimpan');
+            btnSimpan.innerText = "Menyimpan...";
+            btnSimpan.disabled = true;
+
+            const payload = {
+                rekanan: document.getElementById('inputRekanan').value,
+                tipe: document.getElementById('inputType').value,
+                keterangan: document.getElementById('inputKeterangan').value,
+                verifikasi_tanggal: document.getElementById('verifikasiTanggal').value || null,
+                verifikasi_nomor: document.getElementById('verifikasiNomor').value,
+                verifikasi_nilai: document.getElementById('verifikasiNilai').value || 0,
+                proses: document.getElementById('verifikasiProses').value,
+                kontrak: document.getElementById('verifikasiKontrak').value,
+                
+                // Mengambil Teks ke database (Bukan ID-nya)
+                kro: getSelectedText('akunKro'),
+                ro: getSelectedText('akunRo'),
+                nomor_akun: getSelectedText('akunNomor'),
+                kegiatan: getSelectedText('akunKegiatan'),
+                
+                spm_tanggal: document.getElementById('spmTanggal').value || null,
+                spm_nomor: document.getElementById('spmNomor').value,
+                spm_nilai: document.getElementById('spmNilai').value || 0,
+                sp2d_tanggal: document.getElementById('sp2dTanggal').value || null,
+                sp2d_nomor: document.getElementById('sp2dNomor').value,
+                sp2d_nilai: document.getElementById('sp2dNilai').value || 0
+            };
+
+            const targetUrl = idEditAktif ? `${API_SPM}/${idEditAktif}` : API_SPM;
+            const targetMethod = idEditAktif ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(targetUrl, {
+                    method: targetMethod,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(response.ok) {
+                    bsModal.hide();
+                    loadDataSPM(); 
+                } else {
+                    const errorData = await response.json();
+                    alert('Gagal: ' + errorData.message);
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan pada jaringan.');
+            } finally {
+                btnSimpan.innerText = "Simpan Data";
+                btnSimpan.disabled = false;
+                cekStatusProses(); 
+            }
+        });
+
+        async function hapusData(id) {
+            if(!confirm("Apakah Anda yakin ingin menghapus data ini? Aksi ini tidak dapat dibatalkan.")) return;
+            try {
+                const response = await fetch(`${API_SPM}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if(response.ok) loadDataSPM(); 
+                else alert('Gagal menghapus data.');
+            } catch (error) { alert('Terjadi kesalahan koneksi saat menghapus.'); }
+        }
+
+        // ==========================================
+        // INIT PADA SAAT HALAMAN DIBUKA
+        // ==========================================
+        loadDropdownKRO();
+        loadDataSPM();
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Realisasi - Sistem Keuangan</title>
+    <!-- Import Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Import SheetJS untuk Export ke Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; padding: 20px; font-size: 13px; }
+        .table-container { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 30px;}
+        
+        table.custom-table { width: max-content; border-collapse: collapse; white-space: nowrap; margin-bottom: 0; }
+        table.custom-table th, table.custom-table td { border: 1px solid #000; padding: 6px 10px; vertical-align: middle; }
+        
+        /* Pewarnaan Sesuai Excel */
+        .bg-header-biru { background-color: #4472c4 !important; color: white; text-align: center; font-weight: bold; }
+        .bg-header-merah { background-color: #ff0000 !important; color: white; text-align: center; font-weight: bold; }
+        .bg-total-kuning { background-color: #ffff99 !important; font-weight: bold; }
+        .bg-row-hijau { background-color: #00ff00 !important; color: black; font-weight: bold; }
+        
+        /* Garis putus-putus */
+        .row-detail td { border-bottom: 1px dotted #000 !important; border-top: 1px dotted #000 !important; }
+        .row-detail td:first-child, .row-detail td:last-child { border-left: 1px solid #000 !important; border-right: 1px solid #000 !important; }
+        
+        .text-end { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .fw-bold { font-weight: bold !important; }
+        .btn-aksi { padding: 2px 8px; font-size: 12px; font-weight: bold; }
+        .table-title { font-weight: bold; margin-bottom: 10px; font-size: 16px; color: #0056b3; text-transform: uppercase;}
+        
+        /* Modifikasi input agar rapi di dalam tabel */
+        input.input-tabel { width: 100px; min-width: 90px; padding: 2px 5px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <!-- HEADER HALAMAN -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="m-0 text-primary fw-bold">Analisis Realisasi Anggaran</h3>
+                <h6 class="text-muted">Dashboard kinerja penyerapan keuangan instansi.</h6>
+            </div>
+            <div>
+                <a href="home.html" class="btn btn-secondary btn-sm me-2">Kembali ke Beranda</a>
+                <button class="btn btn-warning btn-sm me-2 fw-bold" onclick="tambahTabelTahun()">+ Tambah Tabel Tahun</button>
+                <button class="btn btn-info btn-sm text-white fw-bold" onclick="exportKeExcel()">⬇ Download Excel</button>
+            </div>
+        </div>
+        
+        <!-- TABEL 1: BERDASARKAN JENIS BELANJA -->
+        <div class="table-title">1. Realisasi Anggaran Berdasarkan Jenis Belanja</div>
+        <div class="table-container">
+            <table class="table custom-table" id="tabel1">
+                <thead>
+                    <tr>
+                        <th class="bg-header-biru" style="min-width: 250px;">Jenis Belanja</th>
+                        <th class="bg-header-biru">Januari</th><th class="bg-header-biru">Februari</th><th class="bg-header-biru">Maret</th>
+                        <th class="bg-header-biru">April</th><th class="bg-header-biru">Mei</th><th class="bg-header-biru">Juni</th>
+                        <th class="bg-header-biru">Juli</th><th class="bg-header-biru">Agustus</th><th class="bg-header-biru">September</th>
+                        <th class="bg-header-biru">Oktober</th><th class="bg-header-biru">November</th><th class="bg-header-biru">Desember</th>
+                        <th class="bg-header-biru">Total</th>
+                        <th class="bg-header-biru">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBodyAnalisa">
+                    <tr><td colspan="15" class="text-center">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- WADAH 2 TABEL REALISASI VS PAGU (TAHUN TERBARU & TAHUN SEBELUMNYA) -->
+        <div id="container-tabel-pagu"></div>
+
+        <!-- TABEL 4: YoY DINAMIS -->
+        <div class="table-title mt-4">
+            <span id="judul4">4. Realisasi Anggaran YoY</span>
+        </div>
+        <div class="table-container p-0 border-0 shadow-none">
+            <table class="table custom-table" id="tabel4">
+                <thead>
+                    <tr>
+                        <th class="bg-header-biru" style="min-width: 250px;">Tahun Anggaran</th>
+                        <th class="bg-header-biru">Januari</th><th class="bg-header-biru">Februari</th><th class="bg-header-biru">Maret</th>
+                        <th class="bg-header-biru">April</th><th class="bg-header-biru">Mei</th><th class="bg-header-biru">Juni</th>
+                        <th class="bg-header-biru">Juli</th><th class="bg-header-biru">Agustus</th><th class="bg-header-biru">September</th>
+                        <th class="bg-header-biru">Oktober</th><th class="bg-header-biru">November</th><th class="bg-header-biru">Desember</th>
+                        <th class="bg-header-biru">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBodyYoY">
+                    <tr><td colspan="14" class="text-center">Menyiapkan tabel perbandingan YoY...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL FORM JENIS BELANJA -->
+    <div class="modal fade" id="modalJenis" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalJudulJenis">Edit Jenis Belanja</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formJenis">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kode Akun (2 Digit)</label>
+                            <select class="form-select border-success" id="inputKode" required>
+                                <option value="" disabled selected>-- Pilih Kode Belanja --</option>
+                                <option value="51">51 - Belanja Pegawai</option>
+                                <option value="52">52 - Belanja Barang</option>
+                                <option value="53">53 - Belanja Modal</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nama Jenis Belanja</label>
+                            <input type="text" class="form-control" id="inputNama" placeholder="Contoh: Belanja Pegawai" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="analisis-realisasi.js"></script>
+</body>
+</html>
